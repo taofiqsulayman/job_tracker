@@ -6,29 +6,29 @@ import {
     onSnapshot,
     where,
     Timestamp,
-    addDoc,
     setDoc,
     doc,
     arrayUnion,
+    getDoc,
 } from "firebase/firestore";
-import { log } from "console";
 
 type JobCounterProps = {
     user: string;
 };
 
 const JobCounter = ({ user }: JobCounterProps) => {
-    const [count, setCount] = useState<number>(() => {
-        const savedCount = localStorage.getItem("jobCount");
-        return savedCount ? parseInt(savedCount, 10) : 0;
-    });
+    const [count, setCount] = useState(0);
+    const [dailyTotal, setDailyTotal] = useState(0);
     const [weeklyTotal, setWeeklyTotal] = useState(0);
     const [monthlyTotal, setMonthlyTotal] = useState(0);
     const [refreshPage, setRefreshPage] = useState(false);
+    const [selectedDate, setSelectedDate] = useState(new Date());
 
-    useEffect(() => {
-        localStorage.setItem("jobCount", count.toString());
-    }, [count]);
+    const handleDateChange = (event: {
+        target: { value: string | number | Date };
+    }) => {
+        setSelectedDate(new Date(event.target.value));
+    };
 
     const increment = () => {
         setCount(count + 1);
@@ -63,7 +63,7 @@ const JobCounter = ({ user }: JobCounterProps) => {
     };
 
     const handleSave = () => {
-        saveCountToFireStore(user, new Date(), count)
+        saveCountToFireStore(user, selectedDate, count)
             .then(() => {
                 alert("Count saved successfully.");
             })
@@ -75,11 +75,35 @@ const JobCounter = ({ user }: JobCounterProps) => {
     };
 
     useEffect(() => {
+        localStorage.setItem("jobCount", count.toString());
+    }, [count]);
+
+    useEffect(() => {
+        const fetchDailyTotal = async () => {
+            if (!user) {
+                return;
+            }
+
+            const selectedDateString = selectedDate.toISOString().split("T")[0];
+            const docRef = doc(db, "userJobCounts", selectedDateString);
+
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const dailyCounts = docSnap.data().counts;
+                const dailyTotal = dailyCounts.reduce(
+                    (sum: any, count: any) => sum + count,
+                    0
+                );
+                setDailyTotal(dailyTotal);
+            } else {
+                setDailyTotal(0);
+            }
+        };
+
         if (!user) {
             return;
         }
-
-        console.log("user", user);
 
         const startOfWeek = Timestamp.fromDate(
             new Date(
@@ -99,8 +123,6 @@ const JobCounter = ({ user }: JobCounterProps) => {
         const unsubscribe = onSnapshot(q, (querySnapshot) => {
             let countsArr: any[] = [];
             let weeklyCountsArr: any[] = [];
-
-            console.log("querySnapshot", querySnapshot);
 
             querySnapshot.forEach((doc) => {
                 const dailyCounts = doc.data().counts;
@@ -127,11 +149,23 @@ const JobCounter = ({ user }: JobCounterProps) => {
             setWeeklyTotal(weeklyTotal);
         });
 
+        fetchDailyTotal();
         return () => unsubscribe();
-    }, [refreshPage, user]);
+    }, [refreshPage, user, selectedDate]);
 
     return (
-        <div className="flex flex-col items-center justify-between space-y-4 w-full h-2/3 gap-16 dark:bg-black bg-white">
+        <div className="flex flex-col items-center justify-between space-y-4 w-full h-2/3 gap-10 dark:bg-black p-4">
+            <div className="flex gap-5 items-center align-middle">
+                <h2 className="text-2xl font-bold text-blue-500 dark:text-white">
+                    Select Date
+                </h2>
+                <input
+                    type="date"
+                    value={selectedDate.toISOString().split("T")[0]}
+                    onChange={handleDateChange}
+                    className="px-4 py-2 border border-gray-300 rounded dark:bg-gray-800 dark:text-white"
+                />
+            </div>
             <h2 className="text-2xl font-bold text-blue-500 dark:text-white">
                 Number of Jobs Done
             </h2>
@@ -157,6 +191,14 @@ const JobCounter = ({ user }: JobCounterProps) => {
                 Save Count
             </button>
             <div className="flex space-x-4">
+                <div className="flex flex-col items-center justify-center bg-gray-200 p-4 rounded dark:bg-gray-800 dark:text-white">
+                    <h3 className="text-xl font-bold text-blue-500 dark:text-white">
+                        Daily Total
+                    </h3>
+                    <p className="text-4xl font-bold dark:text-white">
+                        {dailyTotal}
+                    </p>
+                </div>
                 <div className="flex flex-col items-center justify-center bg-gray-200 p-4 rounded dark:bg-gray-800 dark:text-white">
                     <h3 className="text-xl font-bold text-blue-500 dark:text-white">
                         Weekly Total

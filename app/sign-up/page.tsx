@@ -1,22 +1,29 @@
-'use client'
+"use client";
 import { auth } from "@/app/firebase/config";
 import { useCreateUserWithEmailAndPassword } from "react-firebase-hooks/auth";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 const SignUp = () => {
+    const router = useRouter();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [createUserWithEmailAndPassword] =
         useCreateUserWithEmailAndPassword(auth);
 
-    const handleSignUp = async () => {
-        try {
-            await createUserWithEmailAndPassword(email, password);
-            sessionStorage.setItem("user", "true");
-        } catch (e) {
-            console.error(e);
-        }
-    };
+const handleSignUp = async () => {
+    createUserWithEmailAndPassword(email, password)
+        .then((response) => {
+            if (response?.user) {
+                sessionStorage.setItem("user", "true");
+                setEmail("");
+                setPassword("");
+                router.push("/sign-in");
+            } else {
+                alert('Something went wrong, try again later')
+            }
+        })
+};
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900">

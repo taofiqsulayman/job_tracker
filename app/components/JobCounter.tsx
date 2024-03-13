@@ -16,6 +16,9 @@ type JobCounterProps = {
     user: string;
 };
 
+//TODO: make the weekly and monthly totals a reflection of the selected date
+//TODO: make app a PWA
+
 const JobCounter = ({ user }: JobCounterProps) => {
     const [count, setCount] = useState(0);
     const [dailyTotal, setDailyTotal] = useState(0);
@@ -28,6 +31,7 @@ const JobCounter = ({ user }: JobCounterProps) => {
         target: { value: string | number | Date };
     }) => {
         setSelectedDate(new Date(event.target.value));
+        setRefreshPage(true);
     };
 
     const increment = () => {
@@ -55,7 +59,10 @@ const JobCounter = ({ user }: JobCounterProps) => {
             {
                 user,
                 date: Timestamp.fromDate(date),
-                counts: arrayUnion(count),
+                counts: arrayUnion({
+                    timestamp: Timestamp.fromDate(new Date()),
+                    count,
+                }),
             },
             { merge: true }
         );
@@ -75,32 +82,6 @@ const JobCounter = ({ user }: JobCounterProps) => {
     };
 
     useEffect(() => {
-        localStorage.setItem("jobCount", count.toString());
-    }, [count]);
-
-    useEffect(() => {
-        const fetchDailyTotal = async () => {
-            if (!user) {
-                return;
-            }
-
-            const selectedDateString = selectedDate.toISOString().split("T")[0];
-            const docRef = doc(db, "userJobCounts", selectedDateString);
-
-            const docSnap = await getDoc(docRef);
-
-            if (docSnap.exists()) {
-                const dailyCounts = docSnap.data().counts;
-                const dailyTotal = dailyCounts.reduce(
-                    (sum: any, count: any) => sum + count,
-                    0
-                );
-                setDailyTotal(dailyTotal);
-            } else {
-                setDailyTotal(0);
-            }
-        };
-
         if (!user) {
             return;
         }
@@ -127,12 +108,17 @@ const JobCounter = ({ user }: JobCounterProps) => {
             querySnapshot.forEach((doc) => {
                 const dailyCounts = doc.data().counts;
                 const dailyTotal = dailyCounts.reduce(
-                    (sum: any, count: any) => sum + count,
+                    (sum: any, countObj: { count: any }) =>
+                        sum + countObj.count,
                     0
                 );
                 countsArr.push(dailyTotal);
                 if (doc.data().date.toDate() >= startOfWeek.toDate()) {
                     weeklyCountsArr.push(dailyTotal);
+                }
+
+                if (doc.id === selectedDate.toISOString().split("T")[0]) {
+                    setDailyTotal(dailyTotal);
                 }
             });
 
@@ -149,9 +135,8 @@ const JobCounter = ({ user }: JobCounterProps) => {
             setWeeklyTotal(weeklyTotal);
         });
 
-        fetchDailyTotal();
         return () => unsubscribe();
-    }, [refreshPage, user, selectedDate]);
+    }, [user, selectedDate, refreshPage]);
 
     return (
         <div className="flex flex-col items-center justify-between space-y-4 w-full h-2/3 gap-10 dark:bg-black p-4">

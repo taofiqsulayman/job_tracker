@@ -11,6 +11,16 @@ import {
     arrayUnion,
     getDoc,
 } from "firebase/firestore";
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Car } from "lucide-react";
 
 type JobCounterProps = {
     user: string;
@@ -25,13 +35,15 @@ const JobCounter = ({ user }: JobCounterProps) => {
     const [weeklyTotal, setWeeklyTotal] = useState(0);
     const [monthlyTotal, setMonthlyTotal] = useState(0);
     const [refreshPage, setRefreshPage] = useState(false);
-    const [selectedDate, setSelectedDate] = useState(new Date());
+    const [date, setDate] = useState(new Date());
 
     const handleDateChange = (event: {
         target: { value: string | number | Date };
     }) => {
-        setSelectedDate(new Date(event.target.value));
+        if (!date) return;
+        setDate(new Date(event.target.value));
         setRefreshPage(true);
+        console.log(date);
     };
 
     const increment = () => {
@@ -70,7 +82,7 @@ const JobCounter = ({ user }: JobCounterProps) => {
     };
 
     const handleSave = () => {
-        saveCountToFireStore(user, selectedDate, count)
+        saveCountToFireStore(user, date, count)
             .then(() => {
                 alert("Count saved successfully.");
             })
@@ -80,6 +92,12 @@ const JobCounter = ({ user }: JobCounterProps) => {
             });
         setRefreshPage(true);
     };
+
+    const data = [
+        { title: "Daily Total", total: dailyTotal },
+        { title: "Weekly Total", total: weeklyTotal },
+        { title: "Monthly Total", total: monthlyTotal },
+    ];
 
     useEffect(() => {
         if (!user) {
@@ -117,7 +135,7 @@ const JobCounter = ({ user }: JobCounterProps) => {
                     weeklyCountsArr.push(dailyTotal);
                 }
 
-                if (doc.id === selectedDate.toISOString().split("T")[0]) {
+                if (doc.id === date.toISOString().split("T")[0]) {
                     setDailyTotal(dailyTotal);
                 }
             });
@@ -136,70 +154,55 @@ const JobCounter = ({ user }: JobCounterProps) => {
         });
 
         return () => unsubscribe();
-    }, [user, selectedDate, refreshPage]);
+    }, [user, date, refreshPage]);
 
     return (
-        <div className="flex flex-col items-center justify-between space-y-4 w-full h-2/3 gap-10 dark:bg-black p-4">
+        <div className="flex flex-col items-center justify-between space-y-4 w-full h-2/3 gap-6 p-4">
             <div className="flex gap-5 items-center align-middle">
-                <h2 className="text-2xl font-bold text-blue-500 dark:text-white">
-                    Select Date
-                </h2>
+                <h2 className="text-2xl font-bold">Select Date</h2>
                 <input
                     type="date"
-                    value={selectedDate.toISOString().split("T")[0]}
+                    value={date.toISOString().split("T")[0]}
                     onChange={handleDateChange}
-                    className="px-4 py-2 border border-gray-300 rounded dark:bg-gray-800 dark:text-white"
+                    className="px-4 py-2 border"
                 />
             </div>
-            <h2 className="text-2xl font-bold text-blue-500 dark:text-white">
-                Number of Jobs Done
-            </h2>
+            <h2 className="text-2xl font-bold">Number of Jobs Done</h2>
             <div className="flex items-center justify-center space-x-4 gap-4">
-                <button
+                <Button
                     onClick={decrement}
-                    className="px-16 py-10 bg-red-500 text-white rounded text-2xl font-bold"
+                    className="rounded-full text-6xl font-bold px-20 py-24 bg-secondary text-red-500"
                 >
                     -
-                </button>
-                <p className="text-6xl font-bold dark:text-white">{count}</p>
-                <button
+                </Button>
+                <Card className="rounded-full">
+                    <CardContent className="flex flex-col items-center justify-center p-20">
+                        <p className="text-6xl font-bold">{count}</p>
+                    </CardContent>
+                </Card>
+                <Button
                     onClick={increment}
-                    className="px-16 py-10 bg-green-500 text-white rounded text-2xl font-bold"
+                    className="rounded-full text-6xl font-bold px-20 py-24 bg-secondary text-green-500"
                 >
                     +
-                </button>
+                </Button>
             </div>
-            <button
-                onClick={handleSave}
-                className="px-8 py-5 bg-blue-500 text-white rounded text-2xl font-bold"
-            >
+
+            <Button className="text-2xl p-5" onClick={handleSave}>
                 Save Count
-            </button>
+            </Button>
+
             <div className="flex space-x-4">
-                <div className="flex flex-col items-center justify-center bg-gray-200 p-4 rounded dark:bg-gray-800 dark:text-white">
-                    <h3 className="text-xl font-bold text-blue-500 dark:text-white">
-                        Daily Total
-                    </h3>
-                    <p className="text-4xl font-bold dark:text-white">
-                        {dailyTotal}
-                    </p>
-                </div>
-                <div className="flex flex-col items-center justify-center bg-gray-200 p-4 rounded dark:bg-gray-800 dark:text-white">
-                    <h3 className="text-xl font-bold text-blue-500 dark:text-white">
-                        Weekly Total
-                    </h3>
-                    <p className="text-4xl font-bold dark:text-white">
-                        {weeklyTotal}
-                    </p>
-                </div>
-                <div className="flex flex-col items-center justify-center bg-gray-200 p-4 rounded dark:bg-gray-800 dark:text-white">
-                    <h3 className="text-xl font-bold text-blue-500 dark:text-white">
-                        Monthly Total
-                    </h3>
-                    <p className="text-4xl font-bold dark:text-white">
-                        {monthlyTotal}
-                    </p>
-                </div>
+                {data.map((item) => (
+                    <Card key={item.title}>
+                        <CardHeader>
+                            <CardTitle>{item.title}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="flex flex-col items-center justify-center">
+                            <p className="text-4xl font-bold">{item.total}</p>
+                        </CardContent>
+                    </Card>
+                ))}
             </div>
         </div>
     );

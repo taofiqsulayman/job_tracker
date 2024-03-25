@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import { auth } from "@/app/firebase/config";
 import JobCounter from "./components/JobCounter";
 import { User } from "firebase/auth";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { ModeToggle } from "@/components/ui/theme-toggler";
 
 export default function Home() {
     const [user, setUSer] = useState<User | null>(null);
@@ -23,17 +26,20 @@ export default function Home() {
     }, [router]);
 
     return (
-        <main className="flex min-h-screen flex-col items-center p-24 gap-10">
-            <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-                <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-                Welcome {user?.displayName}
-                </p>
-                <button
-                    onClick={() => auth.signOut()}
-                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                >
-                    Logout
-                </button>
+        <main className="flex flex-col items-center p-24 gap-10">
+            <div className="z-10 max-w-5xl w-full items-center justify-between text-sm lg:flex">
+                <div className="flex items-center justify-center gap-4">
+                    <Avatar>
+                        <AvatarImage src={`https://robohash.org/${Math.floor(Math.random() * 10)}`} />
+                        <AvatarFallback>{user?.displayName}</AvatarFallback>
+                    </Avatar>
+
+                    <p className="font-bold text-xl"> Welcome: {user?.displayName}</p>
+                </div>
+
+                <ModeToggle />
+
+                <Button onClick={() => auth.signOut()}>Logout</Button>
             </div>
 
             <div className="flex flex-col justify-center align-middle w-full">

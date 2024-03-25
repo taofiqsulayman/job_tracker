@@ -3,6 +3,8 @@ import { auth } from "@/app/firebase/config";
 import { useCreateUserWithEmailAndPassword } from "react-firebase-hooks/auth";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 const SignUp = () => {
     const router = useRouter();
@@ -26,35 +28,33 @@ const handleSignUp = async () => {
 };
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900">
-            <h1 className="text-white text-3xl mb-5">Job Tracker</h1>
-            <div className="bg-gray-800 p-10 rounded-lg shadow-xl w-96">
-                <h1 className="text-white text-2xl mb-5">Sign Up</h1>
-                <input
+        <div className="flex flex-col items-center justify-center min-h-screen">
+            <h1 className="text-3xl mb-5 font-bold">Job Tracker</h1>
+            <div className="p-10 flex flex-col gap-5 rounded-lg shadow-xl w-96">
+                <h1 className="text-2xl font-semibold">Sign Up</h1>
+                <Input
                     type="email"
                     placeholder="Email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full p-3 mb-4 bg-gray-700 rounded outline-none text-white placeholder-gray-500"
                 />
-                <input
+
+                <Input
                     type="password"
                     placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full p-3 mb-4 bg-gray-700 rounded outline-none text-white placeholder-gray-500"
                 />
-                <button
-                    onClick={handleSignUp}
-                    className="w-full p-3 bg-indigo-600 rounded text-white hover:bg-indigo-500"
-                >
+
+                <Button className="w-full" onClick={handleSignUp}>
                     Sign Up
-                </button>
-                <p className="text-white text-center mt-4">
+                </Button>
+
+                <p className="text-center font-semibold">
                     Already have an account?{" "}
                     <a
                         href="/sign-in"
-                        className="text-indigo-600 hover:text-indigo-500"
+                        className="font-bold hover:underline"
                     >
                         Sign In
                     </a>

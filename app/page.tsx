@@ -26,8 +26,8 @@ export default function Home() {
     }, [router]);
 
     return (
-        <main className="flex flex-col items-center p-24 gap-10">
-            <div className="z-10 max-w-5xl w-full items-center justify-between text-sm lg:flex">
+        <main className="flex flex-col items-center py-5 px-24 gap-10">
+            <div className="max-w-5xl w-full items-center justify-between text-sm lg:flex">
                 <div className="flex items-center justify-center gap-4">
                     <Avatar>
                         <AvatarImage src={`https://robohash.org/${Math.floor(Math.random() * 10)}`} />

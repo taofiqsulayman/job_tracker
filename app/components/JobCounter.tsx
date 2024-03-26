@@ -9,18 +9,10 @@ import {
     setDoc,
     doc,
     arrayUnion,
-    getDoc,
 } from "firebase/firestore";
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Car } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 type JobCounterProps = {
     user: string;
@@ -36,6 +28,7 @@ const JobCounter = ({ user }: JobCounterProps) => {
     const [monthlyTotal, setMonthlyTotal] = useState(0);
     const [refreshPage, setRefreshPage] = useState(false);
     const [date, setDate] = useState(new Date());
+    const { toast } = useToast();
 
     const handleDateChange = (event: {
         target: { value: string | number | Date };
@@ -83,12 +76,19 @@ const JobCounter = ({ user }: JobCounterProps) => {
 
     const handleSave = () => {
         saveCountToFireStore(user, date, count)
-            .then(() => {
-                alert("Count saved successfully.");
-            })
+            .then(() =>
+                toast({
+                    title: "Count saved successfully.",
+                    description: "Your count has been saved.",
+                })
+            )
             .catch((error) => {
-                console.error("Error saving counts:", error);
-                alert("Error saving counts.");
+                toast({
+                    variant: "destructive",
+                    title: "Uh oh! Something went wrong.",
+                    description: "There was an error saving your count.",
+                });
+                console.error("Error", error);
             });
         setRefreshPage(true);
     };
